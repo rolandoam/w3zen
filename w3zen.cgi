@@ -1,4 +1,4 @@
-#!/usr/local/bin/ruby
+#!/usr/bin/env ruby
 
 require 'cgi'
 require 'erb'
@@ -18,17 +18,19 @@ class W3Zen
     :blog_title => "My Cool Blog",
     :blog_description => "a nice place",
     :time_format => "%Y-%m-%d",
-    :data_dir => "/path/to/your/data_dir",
+    :data_dir => "/Users/rolando/Sites/test",
     :url => "http://myblog.com",
     :num_entries => 40,
     :file_extension => ".txt",
   }
 
+  VERSION = "0.1.0"
+
   module Flavours
     # spit a list of entries in html format
     def html_list(entries)
       '<div class="entries">' <<
-      entries.sort { |a,b| b[:date] <=> a[:date] }.map { |entry|
+      entries.sort { |a,b| (b[:meta] ? b[:meta]['created_at'] : b[:date]) <=> (a[:meta] ? a[:meta]['created_at'] : a[:date]) }.map { |entry|
         "<div class=\"entry\">" <<
         "<div class=\"title\">" << "<a href=\"#{entry[:path].tr(' ', '+').gsub(/\..+$/, '')}\">#{entry[:title]}</a>" <<
         "<span class=\"date\">" << entry[:date].strftime(SETTINGS[:time_format]) << "</span></div></div>"
@@ -51,7 +53,7 @@ class W3Zen
   include Flavours
 
   def initialize(cgi)
-    path_info = (ENV['REQUEST_URI'] || '').gsub(/\?.*$/,'').split('/')
+    path_info = (ENV['PATH_INFO'] || ENV['REQUEST_URI'] || '').gsub(/\?.*$/,'').split('/')
     path_info.shift
     fname = CGI::unescape("#{path_info.join('/')}".gsub(/\.+$/, ''))
 
@@ -68,15 +70,15 @@ class W3Zen
     end
   end
 
-  # wraps a block between pre and post.rhtml
+  # wraps a block within a layout
   def wrap(&block)
-    pre  = ERB.new((File.read("#{SETTINGS[:data_dir]}/pre.rhtml") rescue ''))
-    post = ERB.new((File.read("#{SETTINGS[:data_dir]}/post.rhtml") rescue ''))
-    pre.result(binding) << yield << post.result(binding)
+    layout = ERB.new((File.read("#{SETTINGS[:data_dir]}/layout.rhtml") rescue ''))
+    layout.result(binding)
   end
 
   # should return an array of hashes, with all the entries
   def entries
+    now = Time.now
     Dir[SETTINGS[:data_dir] + "/**/*#{SETTINGS[:file_extension]}"].map { |f|
       file = File.new(f)
       title = File.basename(f, SETTINGS[:file_extension])
@@ -84,9 +86,10 @@ class W3Zen
       {
         :title => title,
         :path  => file.path[SETTINGS[:data_dir].length, 100],
-        :date  => (meta ? meta["created_at"] : file.mtime)
+        :date  => file.ctime,
+        :meta  => meta
       }
-    }
+    }.reject { |e| e[:meta] && e[:meta]['publish_after'] && e[:meta]['publish_after'] < now }
   end
 end
 
