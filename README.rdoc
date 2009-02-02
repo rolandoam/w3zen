@@ -57,14 +57,14 @@ of a W3Zen instance, you can use all the SETTINGS and other variables.
 The yield is necessary, since it will fill the layout with the real
 contents.
 
-The content is structurated really in a really simple way, so you can
+The content is structurated in a really simple way, so you can
 customize most of the visualization using CSS. The basic CSS class are:
 
-  entries: holds all the entries (list format)
-  entry: a specific entry (list format)
-  entry.title: the title of an entry
-  title.date: the date of an entry
-  post: the content of a post (view format)
+entries:: holds all the entries (list format)
+entry:: a specific entry (list format)
+entry.title:: the title of an entry
+title.date:: the date of an entry
+post:: the content of a post (view format)
 
 The content of the post is rendered using RedCloth, so you may freely
 use Textile markup.
