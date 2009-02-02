@@ -1,0 +1,26 @@
+body {
+  font-family: verdana, sans-serif;
+}
+.entries {
+  width: 80%;
+  border: 2px dashed #ccc;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 1em;
+}
+.entry {
+  margin-bottom: 1em;
+}
+.title {
+  font-weight: bold;
+}
+.title .date {
+  float: right;
+}
+.post {
+  width: 80%;
+  border: 2px dashed #ccc;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 1em;
+}

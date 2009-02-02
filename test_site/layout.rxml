@@ -1,0 +1,9 @@
+@xml.channel do
+  @xml.title SETTINGS[:blog_title]
+  @xml.link  SETTINGS[:url]
+  @xml.description SETTINGS[:blog_description]
+  @xml.language = "en-gb"
+
+  # here goes the rest of the stuff
+  yield
+end

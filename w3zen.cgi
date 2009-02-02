@@ -13,6 +13,11 @@ rescue LoadError => err
 end
 
 class W3Zen
+  # some exceptions
+  class W3ZenException < StandardError; end
+  class FileNotFound < W3ZenException; end
+  class SomeError < W3ZenException; end
+
   # constants
   SETTINGS = {
     :blog_title => "My Cool Blog",
@@ -57,13 +62,15 @@ class W3Zen
 
     # spit a single html entry
     def html_entry(entry_path)
-      "<div class=\"post\">" <<
-      RedCloth.new(File.read(entry_path)).to_html <<
-      "</div>"
+      <<-EOS.strip
+<div class="post">
+#{RedCloth.new(File.read(entry_path)).to_html}
+</div>
+      EOS
     end
 
     def rss_entry(entry_path)
-      "wtf!?"
+      raise W3ZenException.new("Method Invalid")
     end
   end
 
@@ -81,7 +88,7 @@ class W3Zen
     elsif File.exists?(fpath = "#{SETTINGS[:data_dir]}/#{fname}#{SETTINGS[:file_extension]}") && File.file?(fpath)
       cgi.out { wrap { safe_send("#{flavour}_entry", fpath) } }
     else
-      cgi.out('status' => "NOT_FOUND") { "File Not Found (#{fname}, #{flavour})" }
+      raise FileNotFound.new(path_info.join('/'))
     end
   end
 
@@ -115,7 +122,7 @@ class W3Zen
         :date  => file.ctime,
         :meta  => meta
       }
-    }.reject { |e| e[:meta] && e[:meta]['publish_after'] && e[:meta]['publish_after'] < now }
+    }.reject { |e| e[:meta] && e[:meta]['publish_after'] && e[:meta]['publish_after'] < now }[0,SETTINGS[:num_entries]]
   end
 
   private
@@ -123,7 +130,7 @@ class W3Zen
     if respond_to?(meth)
       send(meth, *args)
     else
-      raise "File Not Found"
+      raise FileNotFound.new(meth)
     end
   end
 end
@@ -133,11 +140,32 @@ if __FILE__ == $0
   begin
     W3Zen.new(cgi)
   rescue Exception => err
-    cgi.out("status" => "SERVER_ERROR") do
-      "<h1>Something Terrible Happened!</h1>" <<
-      "<pre>#{err}\n" <<
-      err.backtrace.join("\n") <<
-      "</pre>\n"
+    case err
+    when W3Zen::FileNotFound
+      cgi.out("status" => "NOT_FOUND") do
+        <<-EOS
+<h1>Error 404: File not found</h1>
+#{err}
+        EOS
+      end
+    when W3Zen::W3ZenException
+      # output something more useful
+      cgi.out("status" => "SERVER_ERROR") do
+        <<-EOS
+<h1>Ooops... It sure wasn't my fault!</h1>
+(the error was: #{err})
+        EOS
+      end
+    else
+      # this might be a bug
+      cgi.out("status" => "SERVER_ERROR") do
+        <<-EOS
+<h1>Something Terrible Happened!</h1>
+<pre>#{err}
+#{err.backtrace.join("\n")}
+</pre>
+        EOS
+      end
     end
-  end
+  end # rescue
 end

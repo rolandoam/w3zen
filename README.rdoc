@@ -3,7 +3,7 @@ by Rolando Abarca
 
 * About
 
-w3zen is a minimalistic 
+w3zen is a minimalistic blog script, inspired in Blosxom.
 
 * HowTo
 
@@ -35,6 +35,10 @@ structure of directories. The w3zen.cgi script will search all files
 there, order them by ctime (check File::ctime) in descending order and
 list them in your main page. That's it!
 
+* Flavours
+
+Talk about the flavours here
+
 * Customizing
 
 Inside your data_dir you can customize the layout, creating a file
@@ -42,6 +46,7 @@ layout.rhtml. Usually you would create a layout with a structure like
 this:
 
   <html>
+  <title><%= SETTINGS[:blog_title] %></title>
   <body>
   <%= yield %>
   </body>
