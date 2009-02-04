@@ -1,15 +1,16 @@
-#!/usr/bin/env ruby
+#!/usr/local/bin/ruby19
 
 require 'cgi'
 require 'erb'
 require 'yaml'
 begin
   require 'rubygems'
-  require 'redcloth'
+  require 'bluecloth'
 rescue LoadError => err
-  cgi.out("status" => "SERVER_ERROR") {
-    "Error when requiring rubygems and/or RedCloth (#{err})"
+  CGI.new.out("status" => "SERVER_ERROR") {
+    "Error when requiring rubygems and/or RedCloth (#{err})\n"
   }
+  exit(0)
 end
 
 class W3Zen
@@ -64,7 +65,7 @@ class W3Zen
     def html_entry(entry_path)
       <<-EOS.strip
 <div class="post">
-#{RedCloth.new(File.read(entry_path)).to_html}
+#{BlueCloth.new(File.read(entry_path)).to_html}
 </div>
       EOS
     end

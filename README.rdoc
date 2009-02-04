@@ -66,8 +66,8 @@ entry.title:: the title of an entry
 title.date:: the date of an entry
 post:: the content of a post (view format)
 
-The content of the post is rendered using RedCloth, so you may freely
-use Textile markup.
+The content of the post is rendered using BlueCloth, so you may freely
+use Markdown.
 
 * Meta Information for your posts
 
