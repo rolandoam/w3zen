@@ -1,11 +1,11 @@
 w3zen.cgi v0.1.0
 by Rolando Abarca
 
-* About
+= About
 
 w3zen is a minimalistic blog script, inspired in Blosxom.
 
-* HowTo
+= HowTo
 
 Place w3zen.cgi in your public web directory, and add execution
 permissions to the file. A common usage is to set the w3zen.cgi as the
@@ -35,11 +35,11 @@ structure of directories. The w3zen.cgi script will search all files
 there, order them by ctime (check File::ctime) in descending order and
 list them in your main page. That's it!
 
-* Flavours
+= Flavours
 
 Talk about the flavours here
 
-* Customizing
+= Customizing
 
 Inside your data_dir you can customize the layout, creating a file
 layout.rhtml. Usually you would create a layout with a structure like
@@ -69,7 +69,7 @@ post:: the content of a post (view format)
 The content of the post is rendered using BlueCloth, so you may freely
 use Markdown.
 
-* Meta Information for your posts
+= Meta Information for your posts
 
 You can add additional information on your posts, creating a file with
 the same name than your entry, but with the ".yaml" extension. Inside
@@ -83,6 +83,6 @@ that YAML file, you can place the following info (keys as ruby strings)
 
 Any other info will be ignored.
 
-* Changelog
+= Changelog
 
 v0.1.0 - Initial Release
