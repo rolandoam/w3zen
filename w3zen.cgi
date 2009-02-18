@@ -1,14 +1,14 @@
-#!/usr/local/bin/ruby19
+#!/usr/bin/env ruby
 
 require 'cgi'
 require 'erb'
 require 'yaml'
 begin
   require 'rubygems'
-  require 'bluecloth'
+  require 'rdiscount'
 rescue LoadError => err
   CGI.new.out("status" => "SERVER_ERROR") {
-    "Error when requiring rubygems and/or RedCloth (#{err})\n"
+    "<h1>Error when requiring rubygems and/or rdiscount (#{err})</h1>\n"
   }
   exit(0)
 end
@@ -17,7 +17,6 @@ class W3Zen
   # some exceptions
   class W3ZenException < StandardError; end
   class FileNotFound < W3ZenException; end
-  class SomeError < W3ZenException; end
 
   # constants
   SETTINGS = {
@@ -26,7 +25,7 @@ class W3Zen
     :time_format => "%Y-%m-%d",
     :data_dir => "/Users/rolando/Sites/test",
     :url => "http://test.local/~rolando",
-    :num_entries => 40,
+    :num_entries => 20,
     :file_extension => ".txt",
     :default_flavour => "html"
   }
@@ -52,7 +51,7 @@ class W3Zen
 
     # spit a list of entries as rss
     def rss_list(entries)
-      entries.each { |entry|
+      entries.sort { |a,b| (b[:meta] ? b[:meta]['created_at'] : b[:date]) <=> (a[:meta] ? a[:meta]['created_at'] : a[:date]) }.each { |entry|
         @xml.item do
           @xml.title entry[:title]
           @xml.pubDate entry[:meta] && entry[:meta]['created_at'] ? entry[:meta]['created_at'] : entry[:date]
@@ -65,7 +64,7 @@ class W3Zen
     def html_entry(entry_path)
       <<-EOS.strip
 <div class="post">
-#{BlueCloth.new(File.read(entry_path)).to_html}
+#{RDiscount.new(File.read(entry_path)).to_html}
 </div>
       EOS
     end
@@ -76,16 +75,18 @@ class W3Zen
   end
 
   include Flavours
+  attr_reader :out
 
   def initialize(cgi)
     path_info = (ENV['PATH_INFO'] || ENV['REQUEST_URI'] || '').gsub(/\?.*$/,'').split('/')
     path_info.shift
-    md = CGI::unescape("#{path_info.join('/')}").match(/^([^.]+)?(\.(\w+))?$/)
+    md = CGI::unescape(path_info.join('/')).match(/^([^.]+)?(\.(\w+))?$/)
     flavour = md[3] || SETTINGS[:default_flavour]
     fname = md[1] || ''
 
     if fname.empty? || fname == "index"
-      cgi.out("content-type" => CONTENT_TYPE[flavour]) { wrap(flavour) { safe_send("#{flavour}_list", entries) } }
+      first = (cgi["page"].nil? || cgi["page"].empty?) ? 0 : (cgi["page"].to_i - 1) * SETTINGS[:num_entries]
+      cgi.out("content-type" => CONTENT_TYPE[flavour]) { wrap(flavour) { safe_send("#{flavour}_list", entries(first, SETTINGS[:num_entries])) } }
     elsif File.exists?(fpath = "#{SETTINGS[:data_dir]}/#{fname}#{SETTINGS[:file_extension]}") && File.file?(fpath)
       cgi.out { wrap { safe_send("#{flavour}_entry", fpath) } }
     else
@@ -109,7 +110,7 @@ class W3Zen
   end
 
   # should return an array of hashes, with all the entries
-  def entries
+  def entries(first, length)
     now = Time.now
     Dir[SETTINGS[:data_dir] + "/**/*#{SETTINGS[:file_extension]}"].map { |f|
       file = File.new(f)
@@ -123,7 +124,7 @@ class W3Zen
         :date  => file.ctime,
         :meta  => meta
       }
-    }.reject { |e| e[:meta] && e[:meta]['publish_after'] && e[:meta]['publish_after'] < now }[0,SETTINGS[:num_entries]]
+    }.reject { |e| e[:meta] && e[:meta]['publish_after'] && e[:meta]['publish_after'] < now }[first, length]
   end
 
   private
